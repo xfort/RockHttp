@@ -13,7 +13,6 @@ public class CacheInterceptor implements Interceptor {
         Request request = chain.request();
         String cacheKey = request.header("cache_key");
         Response res = chain.proceed(request);
-
         return res;
     }
 }

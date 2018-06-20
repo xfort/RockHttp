@@ -1,7 +1,7 @@
 package org.xfort.xrock.rockhttp.callback;
 
-import android.app.Activity;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 
 import com.google.gson.Gson;
 
@@ -17,7 +17,7 @@ public abstract class GsonUICallback<T> extends RockUICallback<T> {
         this.type = type;
     }
 
-    public GsonUICallback(Activity activity, Type type) {
+    public GsonUICallback(FragmentActivity activity, Type type) {
         super(activity);
         this.type = type;
     }

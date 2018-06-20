@@ -1,7 +1,8 @@
 package org.xfort.xrock.rockhttp.callback;
 
-import android.app.Activity;
+import android.arch.lifecycle.Lifecycle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 
 import java.lang.ref.WeakReference;
 
@@ -12,28 +13,36 @@ public abstract class RockUICallback<T> extends RockCallback implements Runnable
     public abstract T parseResult(byte[] resData);
 
     WeakReference<Fragment> weakFragment;
-    WeakReference<Activity> weakActivity;
+    WeakReference<FragmentActivity> weakActivity;
     T objData;
 
     public RockUICallback(Fragment fragment) {
         weakFragment = new WeakReference<>(fragment);
     }
 
-    public RockUICallback(Activity activity) {
+    public RockUICallback(FragmentActivity activity) {
         weakActivity = new WeakReference<>(activity);
     }
 
     @Override
     public void onResult(byte[] resData, Exception e) {
         objData = parseResult(resData);
-        if (weakFragment != null) {
-            if (weakFragment.get() != null && weakFragment.get().getActivity() != null) {
-                weakFragment.get().getActivity().runOnUiThread(this);
+        Lifecycle.State statcode = null;
+        FragmentActivity fragmentActivity = null;
+        if (weakFragment != null && weakFragment.get() != null) {
+            Fragment fragment = weakFragment.get();
+            if (!fragment.isDetached() && !fragment.isRemoving() && fragment.getActivity() !=
+                    null) {
+                fragmentActivity = fragment.getActivity();
+                statcode = fragment.getLifecycle().getCurrentState();
             }
-        } else if (weakActivity != null) {
-            if (weakActivity.get() != null) {
-                weakActivity.get().runOnUiThread(this);
-            }
+        } else if (weakActivity != null && weakActivity.get() != null) {
+            fragmentActivity = weakActivity.get();
+            statcode = fragmentActivity.getLifecycle().getCurrentState();
+        }
+
+        if (fragmentActivity != null && statcode != null && statcode != Lifecycle.State.DESTROYED) {
+            fragmentActivity.runOnUiThread(this);
         }
     }
 

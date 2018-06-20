@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.xfort.xrock.rockhttp.callback.RockUICallback;
 
@@ -16,17 +17,19 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 public class RockHttpFragment extends Fragment {
     OkHttpClient okHttpClient;
+    TextView tv;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
+        return inflater.inflate(R.layout.fragment_rockhttp, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        tv = view.findViewById(R.id.textview);
     }
 
     @Override
@@ -45,22 +48,27 @@ public class RockHttpFragment extends Fragment {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-        okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(logging).addInterceptor()
-                .build();
+        okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(logging).addInterceptor
+                (new org.xfort.xrock.rockhttp.interceptor.CacheInterceptor()).build();
     }
 
     void testRockUICallback() {
-        Request request = new Request.Builder().url("").build();
-        okHttpClient.newCall(request).enqueue(new RockUICallback<Object>(this) {
-            @Override
-            public void onUIResult(Object data) {
+        Request request = new Request.Builder().url("http://www.163.com/").build();
 
+        okHttpClient.newCall(request).enqueue(new RockUICallback<String>(this) {
+            @Override
+            public void onUIResult(String data) {
+                onresult(data);
             }
 
             @Override
-            public Object parseResult(byte[] resData) {
-                return null;
+            public String parseResult(byte[] resData) {
+                return new String(resData);
             }
         });
+    }
+
+    void onresult(String data) {
+        tv.setText(data);
     }
 }
