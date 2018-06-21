@@ -17,7 +17,6 @@ public abstract class RockCallback implements RockCallbackIn {
     @Override
     public void onResponse(Call call, Response response) {
         if (call.isCanceled()) {
-//            onResult(null, new Exception("canceled"));
             return;
         }
         if (response == null) {

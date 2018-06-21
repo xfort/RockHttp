@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.xfort.xrock.rockhttp.callback.RockUICallback;
+import org.xfort.xrock.rockhttp.interceptor.CacheInterceptor;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -47,9 +48,11 @@ public class RockHttpFragment extends Fragment {
     void initOkhttp() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
+        CacheInterceptor cacheInterceptor = new org.xfort.xrock.rockhttp.interceptor
+                .CacheInterceptor(getContext().getApplicationContext().getCacheDir()
+                .getAbsolutePath());
         okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(logging).addInterceptor
-                (new org.xfort.xrock.rockhttp.interceptor.CacheInterceptor()).build();
+                (cacheInterceptor).build();
     }
 
     void testRockUICallback() {
