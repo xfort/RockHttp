@@ -8,7 +8,7 @@ public interface ResponseCode {
      */
     public final int NetworkError = 1001;
     /**
-     * 读取市局失败
+     * 读取数据失败
      */
     public final int ReadFail = 1002;
 
@@ -16,6 +16,8 @@ public interface ResponseCode {
      * 解析数据失败
      */
     public final int ParseResponseFail = 1003;
+
+
 
 }
 

@@ -48,6 +48,7 @@ public class RockHttpFragment extends Fragment {
     void initOkhttp() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        new okhttp3.internal.cache.CacheInterceptor()
         CacheInterceptor cacheInterceptor = new org.xfort.xrock.rockhttp.interceptor
                 .CacheInterceptor(getContext().getApplicationContext().getCacheDir()
                 .getAbsolutePath());
