@@ -7,10 +7,12 @@ import com.jakewharton.disklrucache.DiskLruCache;
 
 import org.xfort.xrock.rockhttp.CacheMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -27,7 +29,7 @@ public class CacheInterceptor implements Interceptor {
 
     public CacheInterceptor(DiskLruCache diskLruCache, Context appContext) {
         this.diskLruCache = diskLruCache;
-        weakCtx = new WeakReference<>(appContext);
+//        weakCtx = new WeakReference<>(appContext);
 //        Log.d(TAG, "CacheInterceptor()" + System`Clock.elapsedRealtime());
     }
 
@@ -44,25 +46,29 @@ public class CacheInterceptor implements Interceptor {
 
         if (TextUtils.equals(cacheMode, CacheMode.CacheOnly + "")) {
             //只用缓存模式
-            String cacheData = getCache(diskLruCache, String.valueOf(cacheKey.hashCode()));
+            String cacheData = getCache(diskLruCache, cacheKey);
 
             if (TextUtils.isEmpty(cacheData)) {
                 //无缓存数据|读取缓存失败
-                return new Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message
-                        ("缓存数据为空").body(Util.EMPTY_RESPONSE).sentRequestAtMillis(-1L).header(CacheMode
-                        .DataSourceType, CacheMode.FromCache + "").receivedResponseAtMillis(System.currentTimeMillis
-                        ()).build();
+                return new Response.Builder().request(chain.request()).protocol(Protocol
+                        .HTTP_1_1).code(200).message("缓存数据为空").body(Util.EMPTY_RESPONSE)
+                        .sentRequestAtMillis(-1L).header(CacheMode.DataSourceType, CacheMode
+                                .FromCache + "").receivedResponseAtMillis(System
+                                .currentTimeMillis()).build();
             } else {
                 // 从缓存中读到数据
-                return new Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).body
-                        (ResponseBody.create(null, cacheData)).header(CacheMode.DataSourceType, CacheMode.FromCache +
-                        "").build();
+                return new Response.Builder().request(chain.request()).protocol(Protocol
+                        .HTTP_1_1).code(200).body(ResponseBody.create(null, cacheData)).header
+                        (CacheMode.DataSourceType, CacheMode.FromCache + "").build();
             }
         }
 
         Response response = null;
         try {
             response = chain.proceed(request);
+            if (response.isSuccessful()) {
+                response = setCache(diskLruCache, cacheKey, response);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,15 +85,16 @@ public class CacheInterceptor implements Interceptor {
                 String cacheData = getCache(diskLruCache, String.valueOf(cacheKey.hashCode()));
                 if (TextUtils.isEmpty(cacheData)) {
                     //无缓存数据|读取缓存失败
-                    return new Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200)
-                            .message("缓存数据为空").body(Util.EMPTY_RESPONSE).sentRequestAtMillis(-1L).header(CacheMode
-                                    .DataSourceType, CacheMode.FromCache + "").receivedResponseAtMillis(System
+                    return new Response.Builder().request(chain.request()).protocol(Protocol
+                            .HTTP_1_1).code(200).message("缓存数据为空").body(Util.EMPTY_RESPONSE)
+                            .sentRequestAtMillis(-1L).header(CacheMode.DataSourceType, CacheMode
+                                    .FromCache + "").receivedResponseAtMillis(System
                                     .currentTimeMillis()).build();
                 } else {
                     // 从缓存中读到数据
-                    return new Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).body
-                            (ResponseBody.create(null, cacheData)).header(CacheMode.DataSourceType, CacheMode
-                            .FromCache + "").build();
+                    return new Response.Builder().request(chain.request()).protocol(Protocol
+                            .HTTP_1_1).code(200).body(ResponseBody.create(null, cacheData))
+                            .header(CacheMode.DataSourceType, CacheMode.FromCache + "").build();
                 }
             }
         }
@@ -106,8 +113,28 @@ public class CacheInterceptor implements Interceptor {
         return null;
     }
 
-    void setCache(DiskLruCache diskLruCache, String cacheKey) {
-
+    /**
+     * 保存数据到本地
+     *
+     * @param diskcache
+     * @param cacheKey
+     * @param response
+     */
+    Response setCache(DiskLruCache diskcache, String cacheKey, Response response) {
+        if (diskcache == null || diskcache.isClosed()) {
+            return response;
+        }
+        try {
+            MediaType mediaType = response.body().contentType();
+            byte[] body = response.body().bytes();
+            DiskLruCache.Editor editor = diskcache.edit(String.valueOf(cacheKey.hashCode()));
+            editor.set(0, new String(body));
+            editor.commit();
+            diskcache.flush();
+            return response.newBuilder().body(ResponseBody.create(mediaType, body)).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
-
 }

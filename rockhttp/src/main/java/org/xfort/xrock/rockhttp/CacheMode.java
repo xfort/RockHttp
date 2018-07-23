@@ -21,7 +21,6 @@ public interface CacheMode {
      */
     public final int Cache_Else_Network = 3;
 
-
     /**
      * 网络请求失败/网络不可用，则使用缓存数据
      */
@@ -36,6 +35,7 @@ public interface CacheMode {
      * Response 数据来源，本地缓存|网络，在Response header中使用
      */
     public final String DataSourceType = "rock_data_source";
+
     public final int FromCache = 10;
     public final int FromNetwork = 11;
 }

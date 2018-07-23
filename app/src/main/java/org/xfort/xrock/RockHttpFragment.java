@@ -9,8 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.jakewharton.disklrucache.DiskLruCache;
+
 import org.xfort.xrock.rockhttp.callback.RockUICallback;
 import org.xfort.xrock.rockhttp.interceptor.CacheInterceptor;
+
+import java.io.IOException;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,12 +52,18 @@ public class RockHttpFragment extends Fragment {
     void initOkhttp() {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        new okhttp3.internal.cache.CacheInterceptor()
-        CacheInterceptor cacheInterceptor = new org.xfort.xrock.rockhttp.interceptor
-                .CacheInterceptor(getContext().getApplicationContext().getCacheDir()
-                .getAbsolutePath());
-        okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(logging).addInterceptor
-                (cacheInterceptor).build();
+
+        DiskLruCache diskLruCache = null;
+        try {
+            diskLruCache = DiskLruCache.open(getContext().getApplicationContext().getCacheDir(),
+                    1, 1, Long.MAX_VALUE);
+            CacheInterceptor cacheInterceptor = new org.xfort.xrock.rockhttp.interceptor
+                    .CacheInterceptor(diskLruCache, getContext().getApplicationContext());
+            okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(logging)
+                    .addInterceptor(cacheInterceptor).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void testRockUICallback() {

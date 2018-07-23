@@ -28,6 +28,12 @@ public abstract class RockCallback implements RockCallbackIn {
             onResult(resData, null);
         } catch (Exception e) {
             onResult(null, e);
+        } finally {
+            try {
+                response.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
