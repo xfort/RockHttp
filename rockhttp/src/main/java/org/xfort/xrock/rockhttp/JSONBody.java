@@ -48,7 +48,6 @@ public class JSONBody extends RequestBody {
 
         public Builder() {
             this(null);
-
         }
 
         public Builder(Charset charset) {
